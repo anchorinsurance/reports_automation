@@ -18,7 +18,14 @@ if (config.get('database', 'trusted') == 'true'):
 else:
     connect_string = connect_string + "Uid=" + config.get('database', 'db_user') + ";"
     connect_string = connect_string + "Pwd=" + config.get('database', 'db_password') + ";"
+
 from_address = config.get('email', 'from_address')
+file_suffix = (date.today() - timedelta(1)).strftime("%m%d%Y")
+subject_suffix = (date.today() - timedelta(1)).strftime("%m/%d/%Y")
+
+output_folder = config.get('folders', 'output_folder')
+log_folder = config.get('folders', 'log_folder')
+log_file = join("./log", "daily_claims_" + date.today().strftime("%m%d%Y") + ".log")
 
 def run_report(conn, input_date):
 
@@ -114,7 +121,7 @@ def run_report(conn, input_date):
     for row in result_set:
         column_num = 0
         for item in row:                                # i.e. for each field in that row
-            ws0.write(row_number, column_num, str(item), style_row)  # ,wb.get_sheet(0).cell(0,0).style)  #write excel cell from the cursor at row 1
+            ws0.write(row_number, column_num, str(item), style_row)  #write excel cell from the cursor at row 1
             column_num = column_num + 1  # increment the column to get the next field
 
         row_number = row_number + 1
@@ -126,11 +133,6 @@ def run_report(conn, input_date):
         else:
             ws0.col(i).width = 256 * 15
         i = i + 1
-
-    output_folder = config.get('folders', 'output_folder')
-
-    file_suffix = (input_date -timedelta(1)).strftime("%m%d%Y")
-    subject_suffix = (input_date -timedelta(1)).strftime("%m/%d/%Y")
 
     # Save the excel file
     file_name = 'Stingray Daily Claims report - ' + file_suffix + '.xls'
@@ -159,7 +161,7 @@ def send_email_dwh_not_current(file=None):
         [file]
     )
 
-def is_dwh_current(conn, inputdate):
+def is_dwh_current(conn, input_date):
 
     cursor = conn.cursor()
     query = "select top 1 cast(PD_EntryDate as date) from PolicyData order by 1 desc"
@@ -168,7 +170,7 @@ def is_dwh_current(conn, inputdate):
     cursor.close()
     dwh_last_entry_date = result[0][0]
 
-    if dwh_last_entry_date == inputdate + timedelta(days=-1):
+    if dwh_last_entry_date == input_date + timedelta(days=-1):
         return True
     else:
         return False
@@ -176,12 +178,9 @@ def is_dwh_current(conn, inputdate):
 if __name__ == "__main__":
 
     today_date = date.today()
-    week_day = today_date.weekday()
     holiday_list = ['2018-11-22', '2018-11-23']
 
-    log_file = join("./log", "daily_claims_" + today_date.strftime("%m%d%Y") + ".log")
     util.log(log_file, "Process started", False)
-
     success = False
     while not success:
         try:
