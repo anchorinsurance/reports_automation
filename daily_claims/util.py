@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 24 08:02:23 2017
+Created on Tue Nov 4 08:02:23 2017
 
 @author: Surendra Pepakayala
 """
@@ -16,13 +16,12 @@ import textwrap
 
 from configparser import ConfigParser
 
-config = ConfigParser()
-config.read('./config.ini')
-
 def has_attribute(data, attribute):
     return attribute in data and data[attribute] is not None
 
-def send_mail(send_from, send_to, send_cc, subject, text, files=None):
+def send_mail(host, user, pwd,
+              send_from, send_to, send_cc, subject, text,
+              files=None, type=None):
 
     msg = MIMEMultipart()
     msg['From'] = send_from
@@ -30,7 +29,10 @@ def send_mail(send_from, send_to, send_cc, subject, text, files=None):
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
     msg['CC'] = COMMASPACE.join(send_cc)
-    msg.attach(MIMEText(text))
+    if type is None:
+        msg.attach(MIMEText(text))
+    else:
+        msg.attach(MIMEText(text, type, 'utf-8'))
 
     for file in files or []:
         with open(file, "rb") as fil:
@@ -38,9 +40,9 @@ def send_mail(send_from, send_to, send_cc, subject, text, files=None):
         part['Content-Disposition'] = 'attachment; filename="%s"' % basename(file)
         msg.attach(part)
 
-    smtp = smtplib.SMTP(config.get('email', 'smtp_host'))
-    if config.get('email', 'smtp_username').strip() != "":
-        smtp.login(config.get('email', 'smtp_username'), config.get('email', 'smtp_password'))
+    smtp = smtplib.SMTP(host)
+    if user.strip() != "":
+        smtp.login(user, pwd)
     smtp.sendmail(send_from, send_to, msg.as_string())
     smtp.close()
 
@@ -56,3 +58,15 @@ def log(log_file, msg, indent=True):
         f.writelines(msg)
     finally:
         f.close()
+
+def get_db_connection_string(db_host, db_name, db_trusted, db_user, db_pwd):
+
+    connect_string = "Driver={SQL Server Native Client 11.0};"
+    connect_string = connect_string + "Server=" + db_host + ";"
+    connect_string = connect_string + "Database=" + db_name + ";"
+    if (db_trusted == 'true'):
+        connect_string = connect_string + "Trusted_Connection=yes;"
+    else:
+        connect_string = connect_string + "Uid=" + db_user + ";"
+        connect_string = connect_string + "Pwd=" + db_pwd + ";"
+    return connect_string
