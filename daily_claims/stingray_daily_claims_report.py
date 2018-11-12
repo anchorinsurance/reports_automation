@@ -94,7 +94,7 @@ def send_email_dwh_not_current(file=None):
         "DWH is not current to send Daily Claims Report",
         "Good morning,\n\n" \
             + "Note: DWH is not current with latest data to send daily claims report. " \
-            + "The process will check in 30 mins and send the report if the DB is refreshed\n\n" \
+            + "The process will check in 60 mins and send the report if the DB is refreshed\n\n" \
             + "Thank you, Stingray IT",
         [file]
     )
