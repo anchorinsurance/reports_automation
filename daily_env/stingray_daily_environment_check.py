@@ -75,13 +75,13 @@ def send_email(env_status):
 
 if __name__ == "__main__":
 
-    env_list = ['QA', 'UAT'] #, 'STAGING']
+    env_list = ['QA', 'UAT', 'STAGING']
     env_status = {}
 
     while (len(env_status) == 0 or 'Down' in env_status.values() or 'Old Data' in env_status.values()):
         for env in env_list:
             env_status[env] = 'Up & Running' if is_env_up(env) else 'Down'
 
-        #env_status['DWH'] = 'Latest Data' if is_dwh_current() else 'Old Data'
+        env_status['DWH'] = 'Latest Data' if is_dwh_current() else 'Old Data'
         send_email(env_status)
         t.sleep(int(config.get('report', 'retry')))

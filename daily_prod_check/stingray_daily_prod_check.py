@@ -20,7 +20,7 @@ dev_list = [] if config.get('email', 'dev_list').split(',') == [''] else config.
 
 output_folder = config.get('folders', 'output_folder')
 log_folder = config.get('folders', 'log_folder')
-log_file = join(log_folder, "daily_claims_" + date.today().strftime("%m%d%Y") + ".log")
+log_file = join(log_folder, "daily_prod_check_" + date.today().strftime("%m%d%Y") + ".log")
 
 def login(env):
 
@@ -39,6 +39,7 @@ def login(env):
         return token
 
     except Exception as e:
+        util.log(log_file, repr(e), False)
         raise Exception("Login failed")
 
 def get_tasks(env, token):
@@ -70,6 +71,7 @@ def get_tasks(env, token):
         return (running_tasks, failed_tasks)
 
     except Exception as e:
+        util.log(log_file, repr(e), False)
         raise Exception("Failed to get tasks")
 
 def send_email(running_tasks, failed_tasks):
@@ -78,15 +80,19 @@ def send_email(running_tasks, failed_tasks):
               "th { font-weight: bold; text-align: left; background-color: #c8cbd1; } " \
               "th, td { padding: 10px; }</style></head>"
 
-    table = '<table><thead><tr><th>Task</th><th>Status</th></tr></thead><tbody>'
+    running_table = '<table><thead><tr><th>Task</th><th>Status</th></tr></thead><tbody>'
     for task, status in running_tasks.items():
-        table = table + '<tr><td>' + task + '</td><td>'
-        table = table + ('<b style="color:Red">' + status + '</b>')
-        table = table + '</td></tr>'
-    table = table + '</table>'
+        running_table = running_table + '<tr><td>' + task + '</td><td>' + status + '</td></tr>'
+    running_table = running_table + '</table>'
+
+    failed_table = '<table><thead><tr><th>Task</th><th>Status</th></tr></thead><tbody>'
+    for task, status in failed_tasks.items():
+        failed_table = failed_table + '<tr><td>' + task + '</td><td>' + '<b style="color:Red">' + status + '</b></td></tr>'
+    failed_table = failed_table + '</table>'
 
     msg = "Good Morning,<br><br>"
-    msg = msg + "Below is the status of tasks in Stingray production:<br><br>" + table
+    msg = msg + "Below is the list of tasks still running in Stingray production:<br><br>" + running_table
+    msg = msg + "<br><br>Below is the list of tasks that failed in Stingray production:<br><br>" + failed_table
     msg = msg + "<br><br>Thank you,<br>Stingray IT"
     email = header + msg
 
@@ -97,22 +103,33 @@ def send_email(running_tasks, failed_tasks):
         [], 'html'
     )
 
-def send_failure_email():
+def send_failure_email(file):
     util.send_mail(smtp_host, smtp_user, smtp_pwd,
         from_address, dev_list, [],
-        "DWH is not current to send Daily Claims Report",
+        "Production check failed",
         "Good morning,\n\n" \
-            + "Note: DWH is not current with latest data to send daily claims report. " \
-            + "The process will check in 60 mins and send the report if the DB is refreshed\n\n" \
+            + "Note: Production check failed. Please check the attached log file and take action if needed " \
+            + "The process will check in 60 mins and send a status if successful \n\n" \
             + "Thank you, Stingray IT",
+        [file]
     )
 
 if __name__ == "__main__":
 
-    try:
-        token = login('PROD')
-        running_tasks, failed_tasks = get_tasks('PROD', token)
-        send_email(running_tasks, failed_tasks)
-    except Exception as e:
-        send_failure_email()
+    util.log(log_file, "Process started", False)
+    done = False
+    while not done:
+        try:
+            token = login('PROD')
+            running_tasks, failed_tasks = get_tasks('PROD', token)
+            send_email(running_tasks, failed_tasks)
+            util.log(log_file, "Sent status email", False)
+            done = (len(running_tasks) == 0 and len(failed_tasks) == 0)
+        except Exception as e:
+            util.log(log_file, repr(e), False)
+            send_failure_email(log_file)
+            util.log(log_file, "Sent failure email", False)
+            done = False
+
         t.sleep(int(config.get('report', 'retry')))
+    util.log(log_file, "Process ended", False)

@@ -21,7 +21,7 @@ def has_attribute(data, attribute):
 
 def send_mail(host, user, pwd,
               send_from, send_to, send_cc, subject, text,
-              files=None, type='text'):
+              files=None, type=None):
 
     msg = MIMEMultipart()
     msg['From'] = send_from
@@ -29,7 +29,10 @@ def send_mail(host, user, pwd,
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
     msg['CC'] = COMMASPACE.join(send_cc)
-    msg.attach(MIMEText(text, type, 'utf-8'))
+    if type is None:
+        msg.attach(MIMEText(text))
+    else:
+        msg.attach(MIMEText(text, type, 'utf-8'))
 
     for file in files or []:
         with open(file, "rb") as fil:
