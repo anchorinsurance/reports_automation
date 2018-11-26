@@ -29,7 +29,7 @@ def is_env_up(env, env_status):
     try:
         response = requests.post(url + "?t=" + str(ts), data={'SubmitAct':'submit', 'Username':username, 'password':password})
         if ((response.status_code != 200)
-                    and (etree.fromstring(response.content).xpath('//status')[0].text != 'success')):
+                    or (etree.fromstring(response.content).xpath('//status')[0].text != 'success')):
             env_status[env] = 'Down'
             return env_status
 
