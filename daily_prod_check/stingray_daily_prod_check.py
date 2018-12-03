@@ -74,7 +74,7 @@ def get_tasks(env, token):
         util.log(log_file, repr(e), False)
         raise Exception("Failed to get tasks")
 
-def send_email(running_tasks, failed_tasks):
+def send_status_email(running_tasks, failed_tasks):
 
     header = "<head><style> table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; } " \
               "th { font-weight: bold; text-align: left; background-color: #c8cbd1; } " \
@@ -92,18 +92,19 @@ def send_email(running_tasks, failed_tasks):
 
     msg = "Good Morning,<br><br>"
     msg = msg + "Below is the list of tasks still running in Stingray production:<br><br>" + running_table
-    msg = msg + "<br><br>Below is the list of tasks that failed in Stingray production:<br><br>" + failed_table
+    if len(failed_tasks) != 0:
+        msg = msg + "<br><br>Below is the list of tasks that failed in Stingray production:<br><br>" + failed_table
     msg = msg + "<br><br>Thank you,<br>Stingray IT"
     email = header + msg
 
     util.send_mail(config.get('email', 'smtp_host'), config.get('email', 'smtp_user'), config.get('email', 'smtp_pwd'),
         from_address, to_list, cc_list,
-        "Stingray Daily Environment Check for " + t.strftime("%m/%d"),
+        "Stingray Daily Production Check for " + t.strftime("%m/%d"),
         email,
         [], 'html'
     )
 
-def send_failure_email(file):
+def send_failure_email(file=[]):
     util.send_mail(smtp_host, smtp_user, smtp_pwd,
         from_address, dev_list, [],
         "Production check failed",
@@ -111,7 +112,7 @@ def send_failure_email(file):
             + "Note: Production check failed. Please check the attached log file and take action if needed " \
             + "The process will check in 60 mins and send a status if successful \n\n" \
             + "Thank you, Stingray IT",
-        [file]
+        file
     )
 
 if __name__ == "__main__":
@@ -122,12 +123,12 @@ if __name__ == "__main__":
         try:
             token = login('PROD')
             running_tasks, failed_tasks = get_tasks('PROD', token)
-            send_email(running_tasks, failed_tasks)
+            send_status_email(running_tasks, failed_tasks)
             util.log(log_file, "Sent status email", False)
             done = (len(running_tasks) == 0 and len(failed_tasks) == 0)
         except Exception as e:
             util.log(log_file, repr(e), False)
-            send_failure_email(log_file)
+            send_failure_email([log_file])
             util.log(log_file, "Sent failure email", False)
             done = False
 
