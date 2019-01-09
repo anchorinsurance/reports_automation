@@ -10,8 +10,8 @@ def run_report(inputdate):
     connection = pyodbc.connect(
         driver='{iSeries Access ODBC Driver}',
         system='192.168.168.51',
-        uid='tbobbili',
-        pwd='anchor2017')
+        uid='shimpy',
+        pwd='reset123')
     c1 = connection.cursor()
 
     # Query for the NB Inspection report

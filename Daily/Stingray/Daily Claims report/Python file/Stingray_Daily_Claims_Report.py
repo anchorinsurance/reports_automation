@@ -16,6 +16,7 @@ def run_report(inputdate):
 
     # Connection to Dataware House
     cnxn = pyodbc.connect('Driver={SQL Server Native Client 11.0};Server=dwh.relyonanchor.com;Database=AIH_Insurance;Trusted_Connection=yes;')
+
     #Initiare a Cursor
     cursor = cnxn.cursor()
     # Query for daily balance forward/ renewal notification report for Underwriting taken from SRD-861
@@ -66,21 +67,26 @@ def run_report(inputdate):
             , CD_IsClaimOnly	, CO_FirstName + ' ' + CO_LastName	, CO_Address1 + ' ' + ISNULL(CO_Address2,'')	, CO_City	, CO_State	, CO_Zip\
             , PC_FirstName + ' ' + PC_LastName	, PDLI_Address1 + ' ' + ISNULL(PDLI_Address2,'')	, PDLI_City	, PDLI_State	, PDLI_Zip\
         order by CD.CD_ClaimCode; """
+
     # Execute the query
     cursor.execute(q1)
+
     # Save the results in result_set variable
     result_set = cursor.fetchall()
 
     # Create a Excel Workbook
     wb = Workbook()
+
     # Add a sheet SIS NB Inspection
     ws0 = wb.add_sheet('Sheet 1')
+
     # Set Style_string for headers & rows
     style_string = "font: bold off, height 220, name Calibri"
     style = xlwt.easyxf(style_string)
     style_string1 = "font: bold on, height 220, name Calibri; pattern: pattern solid, fore_colour gray25; borders: top_color black, bottom_color black, right_color black, left_color black,\
                                   left thin, right thin, top thin, bottom thin;"
     style1 = xlwt.easyxf(style_string1)
+
     # Add headers to the excel workbook
     ws0.write(0, 0, 'Claim Number', style1)
     ws0.write(0, 1, 'Date Reported', style1)
@@ -110,12 +116,12 @@ def run_report(inputdate):
     # Paste the results in the work book
     for row in result_set:
         column_num = 0
-        for item in row:  # i.e. for each field in that row
-            ws0.write(row_number, column_num, str(item),
-                      style)  # ,wb.get_sheet(0).cell(0,0).style)  #write excel cell from the cursor at row 1
+        for item in row:                                # i.e. for each field in that row
+            ws0.write(row_number, column_num, str(item), style)  # ,wb.get_sheet(0).cell(0,0).style)  #write excel cell from the cursor at row 1
             column_num = column_num + 1  # increment the column to get the next field
 
         row_number = row_number + 1
+
     # Set column width for the sheet
     for i in range(21):
         if i == 1:
@@ -124,14 +130,13 @@ def run_report(inputdate):
             ws0.col(i).width = 256 * 15
         i = i + 1
 
-
-    #Path where the reports are stored
+    # Path where the reports are stored
     test_files = "C:/Reports/Daily/Stingray/Daily Claims report/"
-    #Set filenames and subject name for email
+
+    # Set filenames and subject name for email
     a = inputdate - timedelta(1)
     filename = a.strftime("%m%d%Y")
     subjectname = a.strftime("%m/%d/%Y")
-
 
     # Save the excel file
     fname = 'Stingray Daily Claims report - ' + filename + '.xls'

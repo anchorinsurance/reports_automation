@@ -15,8 +15,8 @@ def run_report(inputdate):
     connection = pyodbc.connect(
         driver='{iSeries Access ODBC Driver}',
         system='192.168.168.51',
-        uid='tbobbili',
-        pwd='anchor2017')
+        uid='shimpy',
+        pwd='reset123')
     c1 = connection.cursor()
 
     q1 = """SELECT TRIM( MONTH(T06.PMISSUDTE) || '/' ||DAY(T06.PMISSUDTE) || '/' || YEAR(T06.PMISSUDTE) ), T01.NTCONR, CONCAT(T01.NTPRFX, T01.NTPLNR), T01.NTPLTY, \
@@ -47,12 +47,12 @@ def run_report(inputdate):
     rb = open_workbook(file_path + inputfile_result[0], formatting_info=True)
 
     # read only copy to introspect the file
-    r_sheet = rb.sheet_by_index(10)  # Need to change the sheet number for every month
+    r_sheet = rb.sheet_by_index(11)  # Need to change the sheet number for every month
     # a writable copy (I can't read values out of this, only write to it)
     wb = copy(rb)
 
     # the sheet to write to within the writable copy
-    ws0 = wb.get_sheet(10)  # Need to change the sheet number for every month
+    ws0 = wb.get_sheet(11)  # Need to change the sheet number for every month
     # ws0 = wb.add_sheet('Daily Activity')
 
     START_ROW = 97  # 0 based (subtract 1 from excel row number)
@@ -113,7 +113,7 @@ def run_report(inputdate):
     msg["From"] = "StingrayDev@relyonanchor.com"
     to_address = ['sisdlynb@relyonanchor.com','tbobbili@relyonanchor.com', 'shimpy@relyonanchor.com', 'jhoward@relyonanchor.com']
     msg["To"] = "sisdlynb@relyonanchor.com"
-    msg["CC"] = "tbobbili@relyonanchor.com; Shimpy <shimpy@relyonanchor.com>; Janie Howard <jhoward@relyonanchor.com>"
+    msg["CC"] = " Shimpy <shimpy@relyonanchor.com>; Janie Howard <jhoward@relyonanchor.com>"
     # Add Body
     msg.attach(MIMEText(
         "Good morning,\n\nPlease find attached New Business report from SIS for "+newfilename+".\n\nThanks.",
