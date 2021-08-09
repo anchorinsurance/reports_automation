@@ -10,7 +10,7 @@ pandas==0.23.4
 pyodbc==4.0.24
 python-dateutil==2.7.5
 pytz==2018.7
-pywin32==224
+pywin32==301
 requests==2.20.1
 six==1.11.0
 tabulate==0.8.2
