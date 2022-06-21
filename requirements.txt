@@ -5,7 +5,7 @@ chardet==3.0.4
 comtypes==1.1.7
 idna==2.7
 lxml==4.2.5
-numpy==1.15.4
+numpy==1.22.0
 pandas==0.23.4
 pyodbc==4.0.24
 python-dateutil==2.7.5
